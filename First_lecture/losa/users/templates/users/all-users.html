@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body style="display: flex;">
+    <table style="border: 1px solid; border-collapse: collapse; text-align: center;">
+        <tr>
+            <th style="border: 1px solid black">ID</th>
+            <th style="border: 1px solid black">Name</th>
+            <th style="border: 1px solid black">Age</th>
+            <th style="border: 1px solid black">Gender</th>
+            <th style="border: 1px solid black">Email</th>
+        </tr>
+        {% for user in users %}
+            <tr>
+                <td style="border: 1px solid black">{{user.id}}</td>
+                <td style="border: 1px solid black">{{user.name}}</td>
+                <td style="border: 1px solid black">{{user.age}}</td>
+                <td style="border: 1px solid black">{{user.gender}}</td>
+                <td style="border: 1px solid black">{{user.email}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h1>{{result | center:"15"}}</h1>
+
+</body>
+</html>
