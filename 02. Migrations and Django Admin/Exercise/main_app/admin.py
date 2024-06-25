@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import EventRegistration, Movie, Student
+from .models import EventRegistration, Movie, Student, Supplier
 
 
 @admin.register(EventRegistration)
@@ -22,14 +22,22 @@ class StudentAdmin(admin.ModelAdmin):
     list_filter = ['age', 'grade', 'date_of_birth']
     search_fields = ['first_name']
     fieldsets = (
-        ('Personal Information',
-            {
-                'fields': ['first_name', 'last_name', 'age', 'date_of_birth']
-            }
-        ),
-        ('Academic Information',
-            {
-                'fields': ['grade']
-            }
-        )
+        ('Personal Information', {
+            'fields': ['first_name', 'last_name', 'age', 'date_of_birth']
+        }),
+        ('Academic Information', {
+            'fields': ['grade']
+        })
     )
+
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'phone']
+    list_filter = ['name', 'phone']
+    search_fields = ['email', 'contact_person', 'phone']
+    fieldsets = [
+        ('Information', {
+            'fields': ['name', 'contact_person', 'email', 'address']
+        })
+    ]
+    list_per_page = 20
