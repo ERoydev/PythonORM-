@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import EventRegistration, Movie, Student, Supplier
+from .models import EventRegistration, Movie, Student, Supplier, Course, Person, Item
 
 
 @admin.register(EventRegistration)
@@ -41,3 +41,26 @@ class SupplierAdmin(admin.ModelAdmin):
         })
     ]
     list_per_page = 20
+
+
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ['title', 'lecturer', 'price', 'start_date']
+    list_filter = ['is_published', 'lecturer']
+    search_fields = ['title', 'lecturer']
+    readonly_fields = ['start_date']
+    fieldsets = [
+        ('Course Information', {
+            'fields': ['title', 'lecturer', 'price', 'start_date', 'is_published']
+        }),
+        ('Description', {
+            'fields': ['description']
+        })
+    ]
+
+@admin.register(Person)
+class PersonAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register()

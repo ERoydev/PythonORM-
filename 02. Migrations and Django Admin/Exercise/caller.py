@@ -5,6 +5,6 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "orm_skeleton.settings")
 django.setup()
 
-from main_app.models import Shoe
+from main_app.models import Person
 
-print(Shoe.objects.values_list('brand').distinct())
+print(Person._meta.get_field('age_group').default)
