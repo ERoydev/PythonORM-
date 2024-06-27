@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import EventRegistration, Movie, Student, Supplier, Course, Person, Item
+from .models import EventRegistration, Movie, Student, Supplier, Course, Person, Item, Smartphone, Order
 
 
 @admin.register(EventRegistration)
@@ -63,4 +63,15 @@ class PersonAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register()
+@admin.register(Item)
+class ItemAdmin(admin.ModelAdmin):
+    list_display = ['name', 'price', 'quantity', 'rarity']
+    list_display_links = ['price', 'quantity', 'rarity']
+
+@admin.register(Smartphone)
+class SmartphoneAdmin(admin.ModelAdmin):
+    list_display = ['brand', 'price', 'category']
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    pass
