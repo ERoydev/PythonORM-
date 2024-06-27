@@ -15,4 +15,4 @@ class User(models.Model):
     email = models.EmailField()
 
     def __str__(self):
-        return self.name
+        return f'User: {self.name} with age {self.age}'
