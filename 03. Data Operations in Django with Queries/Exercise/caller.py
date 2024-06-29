@@ -1,88 +1,249 @@
 import os
 import django
+from django.db.models import QuerySet, F
 
-# Set up Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "orm_skeleton.settings")
 django.setup()
 
-# Import your models here
-from main_app.models import Pet, Artifact, Location
+from django.core.management import call_command
+
+from main_app.models import Pet, Artifact, Location, Car, Task, HotelRoom, Character
 
 
-def create_pet(name: str, species: str):
-    new_pet = Pet(name=name, species=species)
-    new_pet.save()
-    return f'{name} is a very cute {species}!'
+def create_pet(name: str, species: str) -> str:
+    pet = Pet.objects.create(
+        name=name,
+        species=species,
+    )
+
+    return f"{pet.name} is a very cute {pet.species}!"
 
 
-def create_artifact(name: str, origin: str, age: int, description: str, is_magical: bool):
-    new_artifact = Artifact(name=name, origin=origin, age=age, description=description, is_magical=is_magical)
-    new_artifact.save()
-    return f'The artifact {name} is {age} years old!'
+def create_artifact(name: str, origin: str, age: int, description: str, is_magical: bool) -> str:
+    artifact = Artifact.objects.create(
+        name=name,
+        origin=origin,
+        age=age,
+        description=description,
+        is_magical=is_magical,
+    )
+
+    return f"The artifact {artifact.name} is {artifact.age} years old!"
 
 
-def rename_artifact(artifact: Artifact, new_name: str):
+def rename_artifact(artifact: Artifact, new_name: str) -> None:
+    # Artifact.objects.filter(is_magical=True, age__gt=250, pk=artifact.pk).update(name=new_name)
+    # UPDATE artefact SET name = new_name WHERE is_magical=TRUE && age > 250 && id = 1
+
     if artifact.is_magical and artifact.age > 250:
         artifact.name = new_name
         artifact.save()
 
 
-def delete_all_artifacts():
+def delete_all_artifacts() -> None:
     Artifact.objects.all().delete()
 
 
-# def create_locations():
-#     LOCATIONS = [
-#         ("Sofia", "Sofia Region", 1329000, "The capital of Bulgaria and the largest city in the country", False),
-#         ("Plovdiv", "Plovdiv Region", 346942, "The second-largest city in Bulgaria with a rich historical heritage", False),
-#         ("Varna", "Varna Region", 330486, "A city known for its sea breeze and beautiful beaches on the Black Sea", False)
-#     ]
-#     for locat in LOCATIONS:
-#         # new_location = Location(*locat)
-#         new_location = Location(name=locat[0], region=locat[1], population=locat[2], description=locat[3], is_capital=locat[4])
-#         new_location.save()
-#
+def show_all_locations() -> str:
+    locations = Location.objects.all().order_by('-id')
 
-def show_all_locations():
-    all_locations = Location.objects.all()
-    result = []
-
-    for location in sorted(all_locations, key=lambda x: -x.id):
-        message = f'{location.name} has a population of {location.population}!'
-        result.append(message)
-
-    return '\n'.join(result)
+    return "\n".join(str(l) for l in locations)
 
 
-def new_capital():
-    curr_location = Location.objects.first()
-    curr_location.is_capital = True
-    curr_location.save()
+def new_capital() -> None:
+    # Location.objects.filter(id=1).update(is_capital=True)
+
+    location = Location.objects.first()  # SELECT * FROM locations LIMIT 1
+    location.is_capital = True
+    location.save()
 
 
-def get_capitals():
-    all_capitals = Location.objects.filter(is_capital=True)
-
-    result = all_capitals.values('name')
-    return result
+def get_capitals() -> QuerySet:
+    return Location.objects.filter(is_capital=True).values('name')
 
 
-def delete_first_location():
+def delete_first_location() -> None:
     Location.objects.first().delete()
 
-# Create queries within functions
-# 1va zadacha ------------------
-# print(create_pet('Buddy', 'Dog'))
 
-# 2ra zadacha ------------------
-# print(create_artifact('Ancient Sword', 'Lost Kingdom', 500, 'A legendary sword with a rich history', True))
-# artifact_object = Artifact.objcts.get(name='Ancient Sword')
-# rename_artifact(artifact_object, 'Ancient Shield')
-# print(artifact_object.name)
+def apply_discount() -> None:
+    cars = Car.objects.all()
 
-# 3ta zadacha ------------------
-# print(show_all_locations())
-# print(show_all_locations())
-# print(new_capital())
-# print(get_capitals())
+    for car in cars:
+        percentage_off = sum(int(digit) for digit in str(car.year)) / 100  # 2014 => 2 + 0 + 1 + 4 => 7 / 100 => 0.07
+        discount = float(car.price) * percentage_off  # 1000 * 0.07 => 70
+        car.price_with_discount = float(car.price) - discount  # 1000 - 70 => 930
+        car.save()
+
+
+def get_recent_cars() -> QuerySet:
+    return Car.objects.filter(year__gt=2020).values('model', 'price_with_discount')
+
+
+def delete_last_car() -> None:
+    Car.objects.last().delete()
+
+
+def show_unfinished_tasks() -> str:
+    unfinished_tasks = Task.objects.filter(is_finished=False)
+
+    return "\n".join(str(t) for t in unfinished_tasks)
+
+
+def complete_odd_tasks() -> None:
+    tasks = Task.objects.all()
+
+    for task in tasks:
+        if task.id % 2 == 1:
+            task.is_finished = True
+
+    Task.objects.bulk_update(tasks, ['is_finished'])
+
+
+def encode_and_replace(text: str, task_title: str) -> None:
+    decoded_text = ''.join(chr(ord(symbol) - 3) for symbol in text)
+    Task.objects.filter(title=task_title).update(description=decoded_text)
+
+    # Option 2 - worse
+    # tasks_with_matching_title = Task.objects.filter(title=task_title)
+    #
+    # for task in tasks_with_matching_title:
+    #     task.description = decoded_text
+    #
+    # Task.objects.bulk_update(tasks_with_matching_title, ['description'])
+
+
+def get_deluxe_rooms() -> str:
+    deluxe_rooms = HotelRoom.objects.filter(room_type="Deluxe")
+    even_deluxe_rooms = [str(r) for r in deluxe_rooms if r.id % 2 == 0]
+
+    return "\n".join(even_deluxe_rooms)
+
+
+def increase_room_capacity() -> None:
+    rooms = HotelRoom.objects.all().order_by('id')  # id 1, id 2...
+
+    previous_room_capacity = None
+
+    for room in rooms:
+        if not room.is_reserved:
+            continue
+
+        if previous_room_capacity is not None:
+            room.capacity += previous_room_capacity
+        else:
+            room.capacity += room.id
+
+        previous_room_capacity = room.capacity
+
+    HotelRoom.objects.bulk_update(rooms, ['capacity'])
+
+
+def reserve_first_room() -> None:
+    room = HotelRoom.objects.first()
+    room.is_reserved = True
+    room.save()
+
+
+def delete_last_room() -> None:
+    room = HotelRoom.objects.last()
+
+    if not room.is_reserved:
+        room.delete()
+
+ # all_characters = Character.objects.all()
+ #
+ #    for char in all_characters:
+ #        if char.class_name == 'Mage':
+ #            char.level += 3
+ #            char.intelligence -= 7
+ #
+ #        elif char.class_name == 'Warrior':
+ #            char.hit_points -= char.hit_points / 2
+ #            char.dexterity += 4
+ #
+ #        else:
+ #            char.inventory = 'The inventory is empty'
+ #
+ #    Character.objects.bulk_update(all_characters, ['level', 'intelligence', 'dexterity', 'hit_points'])
+ #
+
+def update_characters():
+    Character.objects.filter(class_name='Mage').update(
+        level=F('level') + 3,
+        intelligence=F('intelligence') - 7
+    )
+
+    Character.objects.filter(class_name='Warrior').update(
+        hit_points=F('hit_points') / 2,
+        dexterity=F('dexterity') - 4
+    )
+
+    Character.objects.exclude(class_name__in=['Assassin', 'Scout']).update(
+        inventory="The inventory is empty"
+    )
+
+
+def fuse_characters(first_character: Character, second_character: Character):
+    FUSION_INVENTORY = {
+        'Mage': "Bow of the Elven Lords, Amulet of Eternal Wisdom",
+        'Scout' : "Bow of the Elven Lords, Amulet of Eternal Wisdom",
+        'Warrior': "Dragon Scale Armor, Excalibur",
+        'Assassin': "Dragon Scale Armor, Excalibur"
+    }
+
+    new_char = Character.objects.create(name=f'{first_character.name} {second_character.name}',
+                                        class_name='Fusion',
+                                        level=(first_character.level + second_character.level) // 2,
+                                        strength=(first_character.strength + second_character.strength) * 1.2,
+                                        dexterity=(first_character.dexterity + second_character.dexterity) * 1.4,
+                                        intelligence=(first_character.intelligence + second_character.intelligence) * 1.5,
+                                        hit_points=(first_character.hit_points + second_character.hit_points),
+                                        inventory=FUSION_INVENTORY[first_character.class_name])
+
+    first_character.delete()
+    second_character.delete()
+
+def grand_dexterity():
+    Character.objects.all().update(dexterity=30)
+
+def grand_intelligence():
+    Character.objects.all().update(intelligence=40)
+
+def grand_strength():
+    Character.objects.all().update(strength=50)
+
+def delete_characters():
+    coll = Character.objects.filter(inventory='The inventory is empty').delete()
+
 #
+# character1 = Character.objects.create(
+#     name='Gandalf',
+#     class_name='Mage',
+#     level=10,
+#     strength=15,
+#     dexterity=20,
+#     intelligence=25,
+#     hit_points=100,
+#     inventory='Staff of Magic, Spellbook',
+# )
+#
+# character2 = Character.objects.create(
+#     name='Hector',
+#     class_name='Warrior',
+#     level=12,
+#     strength=30,
+#     dexterity=15,
+#     intelligence=10,
+#     hit_points=150,
+#     inventory='Sword of Troy, Shield of Protection',
+# )
+#
+# fuse_characters(character1, character2)
+# fusion = Character.objects.filter(class_name='Fusion').get()
+#
+# print(fusion.name)
+# print(fusion.class_name)
+# print(fusion.level)
+# print(fusion.intelligence)
+# print(fusion.inventory)
