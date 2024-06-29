@@ -7,7 +7,7 @@ def test_func(request):
 
 
 def show_all_users(request):
-    all = User.objects.filter(name__startswith='A')
+    all = User.objects.filter(name='Ave')
     payload = {'users': all, 'result': 'Emil'}
 
     return render(request, 'users/all-users.html', payload)
