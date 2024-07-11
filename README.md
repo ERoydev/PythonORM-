@@ -11,7 +11,7 @@
 
 ### Zip project on Windows
 ```bash
-   tar -czvf project.zip --exclude='.idea' --exclude='.venv' --exclude='__pycache__' .
+   tar.exe -a -cf project.zip main_app orm_skeleton caller.py manage.py requirements.txt
 ```
 
 ---
@@ -51,6 +51,18 @@
 ---
 
 - [Data Operations with Django Queries](https://forms.gle/Pzay1RHaUuQCb1X68)
+
+---
+
+- [Working with Queries](https://forms.gle/kieTF55zwmK2eAaM7)
+
+---
+
+- [Django Relations](https://forms.gle/6uvQdwzqfxt87kD36)
+
+---
+
+- [Models Inheritance](https://forms.gle/jgC7Mk67gmaaNGvd7)
 
 ---
 
@@ -312,5 +324,254 @@ LOGGING = {
     },
 }
 ```
+
+---
+
+### Working with queries
+
+
+1. Useful Methods
+   - filter() - връща subset от обекти; приема kwargs; връща queryset;
+   - exclude() - връща subset от обекти; приема kwargs; връща queryset;
+   - order_by() - връща сортираните обекти; - за desc;
+   - count() - като len, но по-бързо; count връща само бройката без да му трябвата реалните обекти;
+   - get() - взима един обект по даден критерии;
+
+
+2. Chaning methods
+   - всеки метод работи с върнатия от предишния резултат
+
+
+3. Lookup keys
+   - Използват се във filter, exclude, get;
+   - __exact __iexact - матчва точно;
+   - __contains __icontains - проверява дали съдържа;
+   - __startswith __endswith
+   - __gt __gte
+   - __lt __lte
+   - __range=(2, 5) - both inclusive
+
+4. Bulk methods
+   - използват се, за да извършим операции върху много обекти едновременно
+   - bulk_create - създава множество обекти навъеднъж;
+   - filter().update()
+   - filter().delete()
+
+---
+
+
+###  Django Relations
+
+Django Models Relations
+
+
+1. Database Normalization
+   - Efficient Database Organization
+     - Data normalization - разбива големи таблици на по-малки такива, правейки данните по-организирани
+     - Пример: Все едно имаме онлайн магазин и вместо да пазим име, адрес и поръчка в една таблица, можем да разбием на 3 таблици и така да не повтаряме записи
+   
+    - Guidelines and Rules
+      - First Normal Form (1NF):
+        - елеминираме поврарящите се записи, всяка таблица пази уникални стойности
+
+      - Second Normal Form (2NF): извършваме първото като го правим зависимо на PK
+        - Пример: Онлайн магазин с данни и покупки Customers и Orders са свързани с PK, вместо всичко да е в една таблица
+	
+      - Third Normal Form (3NF):
+        - премахване на преходни зависимости
+        - Таблица служители пази id, служител, град, адрес => разделяме ги на 3 таблици и ги навързваме, без да е задължително по PK, може и по city_id вече employee е независимо
+	
+      - Boyce-Codd Normal Form (BCNF):
+        - По-строга версия на 3NF
+        - Тук правим да се навързват по PK
+	
+      - Fourth Normal Form (4NF):
+        - Ако данни от една таблица се използват в други две то това не е добре
+        - Пример: Имаме Курс X и Курс Y, на X Му трябват книгите A и B, на Y, A и C,
+	    това, което правим е да направим таблица с книгите А и таблица с Книгите Б
+	 
+      - Fifth Normal Form (5NF) - Project-Join Normal Form or PJ/NF:
+        - Кратко казано да не ни се налага да минаваме през таблици с данни, които не ни трябват, за да достигнем до таблица с данни, която ни трябва
+
+   - Database Schema Design
+      - Създаването на различни ключове и връзки между таблиците
+
+   - Minimizing Data Redundancy
+     - Чрез разбиването на таблици бихме имали отново намалено повтаряне на информация
+     - Имаме книга и копия, копията са в отделна таблица, и са линкнати към оригинала
+   
+   - Ensuring Data Integrity & Eliminating Data Anomalies
+     - Това ни помага да update-ваме и изтриваме данните навсякъде еднакво
+     - отново благодарение на някакви constraints можем да променим една стойност в една таблица и тя да се отрази във всички
+
+   - Efficiency and Maintainability
+     - Благодарение на по-малките таблици, ги query–ваме и update-ваме по-бързо
+
+2. Релации в Django Модели
+   - Получават се използвайки ForeignKey полета
+   - related_name - можем да направим обартна връзка
+     - По дефолт тя е името + _set
+  
+   - Пример:
+   ```py
+   class Author(models.Model):
+       name = models.CharField(max_length=100)
+   
+   class Post(models.Model):
+       title = models.CharField(max_length=200)
+       content = models.TextField()
+       author = models.ForeignKey(Author, on_delete=models.CASCADE)
+   ```
+
+- Access all posts written by an author
+```py
+author = Author.objects.get(id=1)
+author_posts = author.post_set.all()
+```
+
+3. Types of relationships
+   - Many-To-One (One-To-Many)
+   - Many-To-Many 
+     - Няма значение, в кой модел се слага
+     - Django автоматично създава join таблица или още наричана junction
+     - Но, ако искаме и ние можем да си създадем: 
+      ```py
+      class Author(models.Model):
+          name = models.CharField(max_length=100)
+      
+      class Book(models.Model):
+          title = models.CharField(max_length=200)
+          authors = models.ManyToManyField(Author, through='AuthorBook')
+      
+      class AuthorBook(models.Model):
+          author = models.ForeignKey(Author, on_delete=models.CASCADE)
+          book = models.ForeignKey(Book, on_delete=models.CASCADE)
+          publication_date = models.DateField()
+      ```
+
+   - OneToOne, предимно се слага на PK
+   - Self-referential Foreign Key
+      - Пример имаме работници и те могат да са мениджъри на други работници
+        
+   ```py
+   class Employee(models.Model):
+       name = models.CharField(max_length=100)
+       supervisor = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+   ```
+
+    - Lazy Relationships - обекта от релацията се взима, чрез заявка, чак когато бъде повикан
+
+---
+
+
+### Models Inheritance and Customization
+
+1. Типове наследяване
+   - Multi-table
+     - Разширяваме модел с полетата от друг модел, като не копираме самите полета, а използваме създадения от django pointer, който прави One-To-One Relationship
+     - Пример: 
+
+	```py
+	class Person(models.Model):
+	    name = models.CharField(max_length=100)
+	    date_of_birth = models.DateField()
+	    
+	    def is_student(self):
+	        """Check if this person is also a student."""
+	        return hasattr(self, 'student')
+	
+	class Student(Person):
+	    student_id = models.CharField(max_length=15)
+	    major = models.CharField(max_length=50)
+	```	
+
+
+   - Abstract Base Classes
+     - При това наследяване не се създават две нови таблици, а само една и тя е на наследяващия клас(Child), като абстрактния клас(Parent) е само шаблон
+     - Постигаме го чрез промяна на Meta класа:
+       ```py
+       class AbstractBaseModel(models.Model):
+           common_field1 = models.CharField(max_length=100)
+           common_field2 = models.DateField()
+    
+           def common_method(self):
+               return "This is a common method"
+    
+           class Meta:
+               abstract = True
+       ```
+
+   - Proxy Models
+     - Използваме ги, за да добавим функционалност към модел, който не можем да достъпим
+     - Можем да добавяме методи, но не и нови полета
+     - Пример:
+
+	```py
+	class Article(models.Model):
+	    title = models.CharField(max_length=200)
+	    content = models.TextField()
+	    published_date = models.DateField()
+	
+	class RecentArticle(Article):
+	    class Meta:
+	        proxy = True
+	
+	    def is_new(self):
+	        return self.published_date >= date.today() - timedelta(days=7)
+	    
+	    @classmethod
+	    def get_recent_articles(cls):
+	        return cls.objects.filter(published_date__gte=date.today() - timedelta(days=7))
+	```
+
+2. Основни Built-In Методи
+   - `save()` - използва се за запазване на записи
+	```py
+	    def save(self, *args, **kwargs):
+	        # Check the price and set the is_discounted field
+	        if self.price < 5:
+	            self.is_discounted = True
+	        else:
+	            self.is_discounted = False
+	
+	        # Call the "real" save() method
+	        super().save(*args, **kwargs)
+	```
+   - `clean()` - използва се, когато искаме да валидираме логически няколко полета, например имаме тениска в 3 цвята, но ако е избран XXL цветовете са само 2.
+ 
+
+3. Custom Model Properties
+   - Както и в ООП, можем чрез @property декоратора да правим нови атрибути, които в случая не се запазват в базата
+   - Използваме ги за динамични изчисления на стойностти
+
+4. Custom Model Fields
+   - Ползваме ги когато, Django няма field, които ни върши работа
+   - Имаме методи като:
+     - from_db_value - извиква се, когато искаме да взмем стойността от базата в пайтън
+     - to_python - извиква се когато правим десериализация или clean
+     - get_prep_value - обратното на from_db_value, от Python към базата, предимно ползваме за сериализации
+     - pre_save - използва се за last minute changes, точно преди да запазим резултата в базата
+
+	```py
+	class RGBColorField(models.TextField):
+	    # Convert the database format "R,G,B" to a Python tuple (R, G, B)
+	    def from_db_value(self, value, expression, connection):
+	        if value is None:
+	            return value
+	        return tuple(map(int, value.split(',')))
+	
+	    # Convert any Python value to our desired format (tuple)
+	    def to_python(self, value):
+	        if isinstance(value, tuple) and len(value) == 3:
+	            return value
+	        if isinstance(value, str):
+	            return tuple(map(int, value.split(',')))
+	        raise ValidationError("Invalid RGB color format.")
+	
+	    # Prepare the tuple format for database insertion
+	    def get_prep_value(self, value):
+	        # Convert tuple (R, G, B) to "R,G,B" for database storage
+	        return ','.join(map(str, value))
+	```
 
 ---
