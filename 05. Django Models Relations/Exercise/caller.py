@@ -11,8 +11,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "orm_skeleton.settings")
 django.setup()
 
 # Import your models here
-from main_app.models import Author, Book, Artist, Song, Product, Review, Driver, DrivingLicense
-
+from main_app.models import Author, Book, Artist, Song, Product, Review, Driver, DrivingLicense, Car, Registration, Owner
 
 def show_all_authors_with_their_books():
     all_authors = Author.objects.all().order_by('id') # Select prefetch prefetch_related
@@ -81,6 +80,19 @@ def calculate_licenses_expiration_dates():
 def get_drivers_with_expired_licenses(due_date: date):
     expired_date = due_date - timedelta(days=365)
     expired_drivers = Driver.objects.filter(license__issue_date__gt=expired_date)
-
     return expired_drivers
+
+def register_car_by_owner(owner):
+    registration = Registration.objects.filter(car__isnull=True).first()
+    car = Car.objects.filter(registration__isnull=True).first()
+
+    registration.registration_date = date.today()
+    registration.car = car
+    registration.save()
+
+    car.owner = owner
+    car.registration = registration
+    car.save()
+
+    return f"Successfully registered {car.model} to {owner.name} with registration number {registration.registration_number}."
 
