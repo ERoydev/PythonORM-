@@ -157,3 +157,35 @@ class Exercise(models.Model):
     difficulty_level = models.PositiveIntegerField()
     duration_minutes = models.PositiveIntegerField()
     repetitions = models.PositiveIntegerField()
+
+    @classmethod
+    def get_long_and_hard_exercises(cls):
+        result = cls.objects.filter(
+            duration_minutes__gt=30,
+            difficulty_level__gte=10
+        )
+        return result
+
+    @classmethod
+    def get_short_and_easy_exercises(cls):
+        result = cls.objects.filter(
+            duration_minutes__lt=15,
+            difficulty_level__lt=5
+        )
+        return result
+
+    @classmethod
+    def get_exercises_within_duration(cls, min_duration: int, max_duration: int):
+        result = cls.objects.filter(
+            duration_minutes__range=(min_duration, max_duration)
+        )
+        return result
+
+    @classmethod
+    def get_exercises_with_difficulty_and_repetitions(cls, min_difficulty, min_repetitions):
+        result = cls.objects.filter(
+            difficulty_level__gte=min_difficulty,
+            repetitions__gte=min_repetitions
+        )
+        return result
+
