@@ -141,7 +141,7 @@ ORM - Object Relational Mapping
      - използвайки RunPython в 95% от случаите няма да ни се наложи да ползавме Scheme Editor, освен, ако не правим някаква временна таблица
        индекси или промяна на схемата на таблицата
    - Стъпки:
-     
+  
       2.1. Създаваме празен файл за миграция: makemigrations --empty main_app - прави празна миграция в зададен от нас app
       
       2.2. Дефиниране на операции - Използваме RunPython за да изпълним data migrations
@@ -370,6 +370,8 @@ LOGGING = {
    - filter().delete()
 
 ---
+
+
 
 
 ###  Django Relations
